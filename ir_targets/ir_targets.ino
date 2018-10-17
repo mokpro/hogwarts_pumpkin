@@ -31,6 +31,7 @@
 unsigned int jab_count_a = 0;
 unsigned int swish_count_a = 0;
 unsigned int swipe_count_a = 0;
+unsigned int unknown_action = 0;
 
 
 unsigned int jab_count_b = 0;
@@ -79,9 +80,9 @@ void loop() {
   for (int i = 0; i < BASE_COUNT; i++) {
     if (!laserHit[i] && irrecvs[i]->decode(&results[i])) {
      recordHit(i);
-     delay(1000);
+//     delay(1000);
     }
-    if (laserHit) {
+    if (laserHit[i]) {
       laserHit[i] = false;
     }
   }
@@ -99,38 +100,36 @@ bool isdoneSleeping() {
 }
 
 void recordHit(int index) {
-  Serial.println("this is from sensor:");
-  Serial.println(index);
+//  Serial.print("this is from sensor: ");
+//  Serial.print(index);
+//  Serial.print("\n");
+
+  bool canPrint = true;
 
   switch(results[index].value)
   {
+    case 0xFFFFFFFF:
+      canPrint = false;
+      break;
     case JAB_A1: 
     case JAB_A2: 
       jab_count_a ++;
-      Serial.println("jab_count a");
-      Serial.println(jab_count_a);   
       break;
 
     case SWISH_A1: 
     case SWISH_A2: 
     case SWISH_A3:
       swish_count_a ++;
-      Serial.println("swish_count a");
-      Serial.println(swish_count_a);
       break;
 
     case SWIPE_A1:
     case SWIPE_A2:
       swipe_count_a ++;
-      Serial.println("swipe_count a");
-      Serial.println(swipe_count_a);
       break;
 
     case JAB_B1:
     case JAB_B2:
       jab_count_b ++;
-      Serial.println("jab_count b");
-      Serial.println(jab_count_b);   
       break;
 
       case SWISH_B1:
@@ -140,26 +139,57 @@ void recordHit(int index) {
       case SWISH_B5: 
       case SWISH_B6:   
       swish_count_b ++;
-      Serial.println("swish_count b");
-      Serial.println(swish_count_b);   
+  
       break;
           
       case SWIPE_B1:
       swipe_count_b ++;
-      Serial.println("swipe_count b");
-      Serial.println(swipe_count_b);   
-      break;
-      
 
+      break;
       
     default:
-      Serial.println(results[index].value, HEX);
-      Serial.println("default value");
+    Serial.println(results[index].value, HEX);
+    unknown_action++;
       break;
   }
+
+  if (canPrint) {
+  // A
+  Serial.print("jab_count a: ");
+  Serial.print(jab_count_a);   
+  Serial.print("\n");   
+
+  Serial.print("swish_count a: ");
+  Serial.print(swish_count_a);
+  Serial.print("\n");   
+
+  Serial.print("swipe_count a: ");
+  Serial.print(swipe_count_a);
+  Serial.print("\n");   
+  
+  // B
+  Serial.print("jab_count b: ");
+  Serial.print(jab_count_b);
+  Serial.print("\n"); 
+
+  Serial.print("swish_count b");
+  Serial.print(swish_count_b);
+  Serial.print("\n"); 
+
+  Serial.print("swipe_count b: ");
+  Serial.print(swipe_count_b);
+  Serial.print("\n");   
+
+  // unknown
+  Serial.print("unknown action: ");
+  Serial.print(unknown_action);
+  Serial.print("\n");
+
+  }
+
   laserHit[index] = true;
   startMillis = millis();
-  turnOnReceiver(index);
+  resetReceiver(index);
 }
 
 
@@ -169,8 +199,7 @@ void turnOffReceiver(int index) {
   digitalWrite(ledPins[index], LOW);
 }
 
-void turnOnReceiver(int index) {
-  digitalWrite(ledPins[index], HIGH);
+void resetReceiver(int index) {
   irrecvs[index]->resume();
 }
 
