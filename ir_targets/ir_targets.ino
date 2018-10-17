@@ -1,30 +1,46 @@
 #include <IRremote.h>
 
 // Constants
-#define BASE_COUNT 1
+#define BASE_COUNT 3
 #define BLUE_LASER 0
 #define RED_LASER 1
 #define DEBUG_MODE true
 #define MIN_DELAY 3000
 #define DELAY_CEIL 4000
 
-#define JAB_A_FRONT 0xFF629D
-#define JAB_A_BACK 0x511DBB
-#define SWISH_A_DOWN 0x87C6D1F
-#define SWISH_A_UP 0x52A3D41F
-#define SWIPE_A 0xD7E84B1B
+//Spells from WAND A
+#define JAB_A1 0xFF629D
+#define JAB_A2 0x511DBB
+#define SWISH_A1 0x87C6D1F
+#define SWISH_A2 0x52A3D41F
+#define SWISH_A3 0xFF22DD
+#define SWIPE_A1 0xD7E84B1B
+#define SWIPE_A2 0xFF02FD
 
-#define JAB_B 0x32C6FDF7 //#3 in remote
+//Spells from WAND B
+#define JAB_B1 0xFF906F
+#define JAB_B2 0xE5CFBD7F
+#define SWISH_B1 0xF92F9847
+#define SWISH_B2 0x1D320F8A
+#define SWISH_B3 0x6653181C
+#define SWISH_B4 0xF076C13B
+#define SWISH_B5 0xFFE01F
+#define SWISH_B6 0xF9EC0294
+#define SWIPE_B1 0xFFA857
 
-unsigned int jab_count = 0;
-unsigned int swish_count = 0;
-unsigned int swipe_count = 0;
+unsigned int jab_count_a = 0;
+unsigned int swish_count_a = 0;
+unsigned int swipe_count_a = 0;
 
+
+unsigned int jab_count_b = 0;
+unsigned int swish_count_b = 0;
+unsigned int swipe_count_b = 0;
 
 // Define all the devices as global variables
 IRrecv *irrecvs[BASE_COUNT];
-int ledPins[] = {2}; // 2, 7, 4
-int receiverPins[] = {8}; //8, 13, 12
+int ledPins[] = {2, 7, 4}; // 2, 7, 4
+int receiverPins[] = {8, 12, 13}; //8, 13, 12
 
 // Define all time related variables
 unsigned long startMillis;
@@ -103,28 +119,57 @@ void turnOnReceiver(int index) {
 
 void recordHit(int index) {
 
+  Serial.println(index);
 
   switch(result.value)
   {
-    case JAB_A_BACK: 
-    case JAB_A_FRONT: 
-      jab_count ++;
-      Serial.println("jab_count");
-      Serial.println(jab_count);   
+    case JAB_A1: 
+    case JAB_A2: 
+      jab_count_a ++;
+      Serial.println("jab_count a");
+      Serial.println(jab_count_a);   
       break;
 
-    case SWISH_A_DOWN: 
-    case SWISH_A_UP: 
-      swish_count ++;
-      Serial.println("swish_count");
-      Serial.println(swish_count);
+    case SWISH_A1: 
+    case SWISH_A2: 
+    case SWISH_A3:
+      swish_count_a ++;
+      Serial.println("swish_count a");
+      Serial.println(swish_count_a);
       break;
 
-    case SWIPE_A:
-      swipe_count ++;
-      Serial.println("swipe_count");
-      Serial.println(swipe_count);
+    case SWIPE_A1:
+    case SWIPE_A2:
+      swipe_count_a ++;
+      Serial.println("swipe_count a");
+      Serial.println(swipe_count_a);
       break;
+
+    case JAB_B1:
+    case JAB_B2:
+      jab_count_b ++;
+      Serial.println("jab_count b");
+      Serial.println(jab_count_b);   
+      break;
+
+       case SWISH_B1:
+      case SWISH_B2:
+      case SWISH_B3: 
+      case SWISH_B4:
+      case SWISH_B5: 
+      case SWISH_B6:   
+      swish_count_b ++;
+      Serial.println("swish_count b");
+      Serial.println(swish_count_b);   
+      break;
+          
+      case SWIPE_B1:
+      swipe_count_b ++;
+      Serial.println("swipe_count b");
+      Serial.println(swipe_count_b);   
+      break;
+      
+
       
     default:
       Serial.println(result.value, HEX);
@@ -169,5 +214,3 @@ void printHit(int index) {
 //    Serial.println(logger);
   }
 }
-
-
