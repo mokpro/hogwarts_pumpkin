@@ -172,7 +172,7 @@ void recordHit(int index) {
   Serial.print(jab_count_b);
   Serial.print("\n"); 
 
-  Serial.print("swish_count b");
+  Serial.print("swish_count b: ");
   Serial.print(swish_count_b);
   Serial.print("\n"); 
 
@@ -183,6 +183,7 @@ void recordHit(int index) {
   // unknown
   Serial.print("unknown action: ");
   Serial.print(unknown_action);
+  Serial.print("\n");
   Serial.print("\n");
 
   }
