@@ -14,8 +14,11 @@
 #define SWISH_A1 0x87C6D1F
 #define SWISH_A2 0x52A3D41F
 #define SWISH_A3 0xFF22DD
+#define SWISH_A4 0xBCD2259E
+#define SWISH_A5 0xDB37307D
 #define SWIPE_A1 0xD7E84B1B
 #define SWIPE_A2 0xFF02FD
+#define SWIPE_A3 0x5CDD8FBD
 
 //Spells from WAND B
 #define JAB_B1 0xFF906F
@@ -27,6 +30,11 @@
 #define SWISH_B5 0xFFE01F
 #define SWISH_B6 0xF9EC0294
 #define SWIPE_B1 0xFFA857
+
+// Actions
+#define JAB 0
+#define SWIPE 1
+#define SWISH 2
 
 unsigned int jab_count_a = 0;
 unsigned int swish_count_a = 0;
@@ -63,6 +71,7 @@ void setup() {
 //  initLeds();
 }
 
+
 void initSensors() {
   for (int i = 0; i < BASE_COUNT; i++) {
     irrecvs[i] = new IRrecv(receiverPins[i]);
@@ -89,6 +98,10 @@ void loop() {
   
 }
 
+
+int pumpkin_action() {
+  return (rand() % 3);
+}
 int interval() {
   // generate random intervel between 500ms to 2500ms
     return (rand() % DELAY_CEIL) + MIN_DELAY;
@@ -105,7 +118,8 @@ void recordHit(int index) {
 //  Serial.print("\n");
 
   bool canPrint = true;
-
+  int person_action;
+  int pumpkin_action = JAB; //FIXME: pumpkin_action();
   switch(results[index].value)
   {
     case 0xFFFFFFFF:
@@ -114,22 +128,30 @@ void recordHit(int index) {
     case JAB_A1: 
     case JAB_A2: 
       jab_count_a ++;
+      person_action = JAB;
       break;
 
     case SWISH_A1: 
-    case SWISH_A2: 
+    case SWISH_A2:
     case SWISH_A3:
+    case SWISH_A4:
+    case SWISH_A5:
       swish_count_a ++;
+      person_action = SWISH;
       break;
 
     case SWIPE_A1:
     case SWIPE_A2:
+    case SWIPE_A3:
       swipe_count_a ++;
+      person_action = SWIPE;
       break;
 
     case JAB_B1:
     case JAB_B2:
       jab_count_b ++;
+      person_action = JAB;
+
       break;
 
       case SWISH_B1:
@@ -139,11 +161,13 @@ void recordHit(int index) {
       case SWISH_B5: 
       case SWISH_B6:   
       swish_count_b ++;
-  
+      person_action = SWISH;
+ 
       break;
           
       case SWIPE_B1:
       swipe_count_b ++;
+      person_action = SWIPE;
 
       break;
       
@@ -155,39 +179,85 @@ void recordHit(int index) {
 
   if (canPrint) {
   // A
-  Serial.print("jab_count a: ");
-  Serial.print(jab_count_a);   
-  Serial.print("\n");   
+//  Serial.print("jab_count a: ");
+//  Serial.print(jab_count_a);   
+//  Serial.print("\n");   
+//
+//  Serial.print("swish_count a: ");
+//  Serial.print(swish_count_a);
+//  Serial.print("\n");   
+//
+//  Serial.print("swipe_count a: ");
+//  Serial.print(swipe_count_a);
+//  Serial.print("\n");   
+//  
+//  // B
+//  Serial.print("jab_count b: ");
+//  Serial.print(jab_count_b);
+//  Serial.print("\n"); 
+//
+//  Serial.print("swish_count b: ");
+//  Serial.print(swish_count_b);
+//  Serial.print("\n"); 
+//
+//  Serial.print("swipe_count b: ");
+//  Serial.print(swipe_count_b);
+//  Serial.print("\n");   
+//
+//  // unknown
+//  Serial.print("unknown action: ");
+//  Serial.print(unknown_action);
+//  Serial.print("\n");
+//  Serial.print("\n");
 
-  Serial.print("swish_count a: ");
-  Serial.print(swish_count_a);
-  Serial.print("\n");   
+  Serial.print("pumpkin_action: ");
 
-  Serial.print("swipe_count a: ");
-  Serial.print(swipe_count_a);
-  Serial.print("\n");   
+  switch(pumpkin_action) {
+    case JAB:
+      Serial.print("jab");
+      break;
+     case SWISH:
+      Serial.print("swish");
+      break;
+     case SWIPE:
+      Serial.print("swipe");
+      break;
+  }
   
-  // B
-  Serial.print("jab_count b: ");
-  Serial.print(jab_count_b);
-  Serial.print("\n"); 
-
-  Serial.print("swish_count b: ");
-  Serial.print(swish_count_b);
-  Serial.print("\n"); 
-
-  Serial.print("swipe_count b: ");
-  Serial.print(swipe_count_b);
-  Serial.print("\n");   
-
-  // unknown
-  Serial.print("unknown action: ");
-  Serial.print(unknown_action);
   Serial.print("\n");
-  Serial.print("\n");
+  Serial.print("your action: ");
 
+
+  switch(person_action) {
+    case JAB:
+      Serial.print("jab");
+      break;
+     case SWISH:
+      Serial.print("swish");
+      break;
+     case SWIPE:
+      Serial.print("swipe");
+      break;
   }
 
+  Serial.print("\n");
+
+  Serial.print("winner: ");
+  if(pumpkin_action == JAB){
+    if (person_action == JAB) {
+      Serial.print("tie");
+    } else if (person_action == SWIPE) {
+      Serial.print("you!");
+    } else {
+      Serial.print("pumpkin!");
+    }
+    
+  }
+ }
+
+ Serial.print("\n");
+
+   
   laserHit[index] = true;
   startMillis = millis();
   resetReceiver(index);
