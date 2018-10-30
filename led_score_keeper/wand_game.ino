@@ -10,6 +10,16 @@
  */
 
 #include "FastLED.h"
+#include <SoftwareSerial.h>
+
+// sound
+#define ARDUINO_RX 5 //should connect to TX of the Serial MP3 Player module
+#define ARDUINO_TX 6 //connect to RX of the module
+#define CMD_SEL_DEV 0X09
+#define DEV_TF 0X02
+
+SoftwareSerial mySerial(ARDUINO_RX, ARDUINO_TX); //init the serial protocol, tell to myserial wich pins are TX and RX
+static int8_t Send_buf[8] = {0};
 
 #define DATA_PIN 6
 #define LED_TYPE WS2812B
@@ -69,6 +79,8 @@ int fireHue = 0;    // red (starts at "data in" end of LED strip)
 int waterHue = 160; // blue (starts at "data out" end of LED strip)
 int airHue = 320;   // #TODO change this to actuval value for white (starts at "data out" end of LED strip)
 
+int TAUNT_COUNTER = 0;
+
 // Timing settings
 
 void setup()
@@ -81,14 +93,23 @@ void setup()
   //set the computer index to one beforejhhnuyhuyh6gumj6gmuy oil the last led position
   //set the human index to one past the last led position
   resetGameState();
-  playSound(GAME_KICKOFF);
+//  playSound(GAME_KICKOFF);
   Serial.begin(9600);
+
+  // sounds initialization
+  mySerial.begin(9600); //Start our Serial coms for THE MP3
+  delay(500); //Wait chip initialization is complete
+  playSound(CMD_SEL_DEV, DEV_TF); //select the TF card
+  delay(200);
+  playSound(0x06, 0X0F);
+
   Serial.print("INITIALIZED!!!\n");
 }
 
 // ==============================================================================Main Loop
 void loop()
 {
+  delay(6000);
   if (gameIdle == true){
     Serial.print("entered idle \n");
 
@@ -170,7 +191,7 @@ void serialEvent()
     else
     {
       //TODO prevent this from going off constantly
-      playSound(SPELL_MISCAST);
+//      playSound(SPELL_MISCAST);
     }
   }
 }
@@ -182,7 +203,23 @@ void idleMode()
   fadeToBlackBy(leds, NUM_LEDS, 20);
   int pos = beatsin16(13, 0, NUM_LEDS - 1);
   if (random(1,110) > 99){
-    playSound(TAUNT);
+      if (TAUNT_COUNTER == 0) {
+        playSound(0X0F, 0X0701);
+      } else if (TAUNT_COUNTER == 1) {
+        playSound(0X0F, 0X0801);
+      } else if (TAUNT_COUNTER == 2) {
+        playSound(0X0F, 0X0901);
+      } else if (TAUNT_COUNTER == 3) {
+        playSound(0X0F, 0X0A01);
+      } else if (TAUNT_COUNTER == 4) {
+        playSound(0X0F, 0X0B01);
+      } else if (TAUNT_COUNTER == 5) {
+        playSound(0X0F, 0X0C01);
+      } else if (TAUNT_COUNTER == 6) {
+        playSound(0X0F, 0X0D01);
+        TAUNT_COUNTER = -1;
+      }
+      TAUNT_COUNTER = TAUNT_COUNTER + 1;
     delay(FRAMES_PER_SECOND * 1);
   }
   delay(FRAMES_PER_SECOND * 1);
@@ -322,10 +359,8 @@ void cCastSpell()
     cSpell = 1;
   }
   Serial.print(cSpell);
-  playSound(TAUNT);
-
   delay(FRAMES_PER_SECOND * 2);
-  playSpellSound(cSpell);
+  playSound(0X0F, 0X0101);
 
   // starts black
   leds[1] = CHSV(getHue(cSpell), 255, 192);
@@ -375,15 +410,15 @@ void playSpellSound(int spell)
 {
   if (spell == 1)
   {
-    playSound(SPELL_CAST_FIRE);
+    playSound(0X0F, 0X0301);
   }
   else if (spell == 2)
   {
-    playSound(SPELL_CAST_WATER);
+    playSound(0X0F, 0X0401);
   }
   else
   {
-    playSound(SPELL_CAST_AIR);
+    playSound(0X0F, 0X0201);
   }
 }
 
@@ -423,10 +458,23 @@ void resolveSpells()
   }
 }
 
-void playSound(char sound){
-  Serial.print("Sound played:");
-  Serial.print(sound);
-  Serial.print("\n");
+void playSound(int8_t command, int16_t dat)
+{
+   delay(20);
+   Send_buf[0] = 0x7e; //starting byte
+   Send_buf[1] = 0xff; //version
+   Send_buf[2] = 0x06; //the number of bytes of the command without starting byte and ending byte
+   Send_buf[3] = command; //
+   Send_buf[4] = 0x00;//0x00 = no feedback, 0x01 = feedback
+   Send_buf[5] = (int8_t)(dat >> 8);//datah
+   Send_buf[6] = (int8_t)(dat); //datal
+   Send_buf[7] = 0xef; //ending byte
+   for(uint8_t i=0; i<8; i++)//
+   {
+     mySerial.write(Send_buf[i]) ;//send bit to serial mp3
+     Serial.print(Send_buf[i],HEX);//send bit to serial monitor in pc
+   }
+   Serial.println();
 }
 
 void hWinRound()
@@ -477,6 +525,7 @@ void tieDisplay()
 {
   // flash three times, the hard way
   printf("tie");
+  playSound(0X0F, 0X0601);
   leds[cIndex] = CRGB::Black;
   leds[hIndex] = CRGB::Black;
   FastLED.show();
@@ -492,11 +541,11 @@ void tieDisplay()
 }
 
 void cWinsSounds(){
-  playSound(C_WINS);
+  playSound(0X0F, 0X0501);
   delay(FRAMES_PER_SECOND *3);
 }
 
 void hWinsSounds() {
-  playSound(C_LOSES);
+  playSound(0X0F, 0X0501);
   delay(FRAMES_PER_SECOND *3);
 }
